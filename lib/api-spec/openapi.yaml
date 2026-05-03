@@ -1,0 +1,918 @@
+openapi: 3.1.0
+info:
+  title: Api
+  version: 0.1.0
+  description: Bug Detection and Repair Platform API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: repositories
+    description: Repository management
+  - name: bugs
+    description: Bug detection and management
+  - name: patches
+    description: Patch generation and application
+  - name: translations
+    description: Cross-language code translation
+  - name: vulnerabilities
+    description: Security vulnerability management
+  - name: agents
+    description: Multi-agent debugging sessions
+  - name: dashboard
+    description: Dashboard analytics and summaries
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /repositories:
+    get:
+      operationId: listRepositories
+      tags: [repositories]
+      summary: List all repositories
+      responses:
+        "200":
+          description: List of repositories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Repository"
+    post:
+      operationId: createRepository
+      tags: [repositories]
+      summary: Add a repository for analysis
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateRepositoryBody"
+      responses:
+        "201":
+          description: Created repository
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Repository"
+
+  /repositories/{id}:
+    get:
+      operationId: getRepository
+      tags: [repositories]
+      summary: Get a repository by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Repository details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Repository"
+    delete:
+      operationId: deleteRepository
+      tags: [repositories]
+      summary: Remove a repository
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /bugs:
+    get:
+      operationId: listBugs
+      tags: [bugs]
+      summary: List bugs with optional filtering
+      parameters:
+        - name: repositoryId
+          in: query
+          schema:
+            type: integer
+        - name: severity
+          in: query
+          schema:
+            type: string
+            enum: [critical, high, medium, low]
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [detected, in_progress, patched, verified, rejected]
+        - name: language
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of bugs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Bug"
+    post:
+      operationId: createBug
+      tags: [bugs]
+      summary: Report a bug
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateBugBody"
+      responses:
+        "201":
+          description: Created bug
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Bug"
+
+  /bugs/{id}:
+    get:
+      operationId: getBug
+      tags: [bugs]
+      summary: Get bug details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Bug details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Bug"
+    patch:
+      operationId: updateBug
+      tags: [bugs]
+      summary: Update bug status or details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateBugBody"
+      responses:
+        "200":
+          description: Updated bug
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Bug"
+    delete:
+      operationId: deleteBug
+      tags: [bugs]
+      summary: Delete a bug
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /patches:
+    get:
+      operationId: listPatches
+      tags: [patches]
+      summary: List all patches
+      parameters:
+        - name: bugId
+          in: query
+          schema:
+            type: integer
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, applied, rejected]
+      responses:
+        "200":
+          description: List of patches
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Patch"
+    post:
+      operationId: createPatch
+      tags: [patches]
+      summary: Create a patch for a bug
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePatchBody"
+      responses:
+        "201":
+          description: Created patch
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Patch"
+
+  /patches/{id}:
+    get:
+      operationId: getPatch
+      tags: [patches]
+      summary: Get patch details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Patch details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Patch"
+    patch:
+      operationId: updatePatch
+      tags: [patches]
+      summary: Apply or reject a patch
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdatePatchBody"
+      responses:
+        "200":
+          description: Updated patch
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Patch"
+
+  /translations:
+    get:
+      operationId: listTranslations
+      tags: [translations]
+      summary: List translation jobs
+      responses:
+        "200":
+          description: List of translation jobs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TranslationJob"
+    post:
+      operationId: createTranslation
+      tags: [translations]
+      summary: Submit a code translation job
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTranslationBody"
+      responses:
+        "201":
+          description: Translation job created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TranslationJob"
+
+  /translations/{id}:
+    get:
+      operationId: getTranslation
+      tags: [translations]
+      summary: Get a translation job
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Translation job details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TranslationJob"
+
+  /vulnerabilities:
+    get:
+      operationId: listVulnerabilities
+      tags: [vulnerabilities]
+      summary: List security vulnerabilities
+      parameters:
+        - name: severity
+          in: query
+          schema:
+            type: string
+            enum: [critical, high, medium, low]
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [open, mitigated, resolved]
+      responses:
+        "200":
+          description: List of vulnerabilities
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Vulnerability"
+
+  /vulnerabilities/{id}:
+    get:
+      operationId: getVulnerability
+      tags: [vulnerabilities]
+      summary: Get vulnerability details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Vulnerability details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Vulnerability"
+    patch:
+      operationId: updateVulnerability
+      tags: [vulnerabilities]
+      summary: Update vulnerability status
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateVulnerabilityBody"
+      responses:
+        "200":
+          description: Updated vulnerability
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Vulnerability"
+
+  /agents:
+    get:
+      operationId: listAgentSessions
+      tags: [agents]
+      summary: List agent debugging sessions
+      responses:
+        "200":
+          description: List of agent sessions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AgentSession"
+    post:
+      operationId: createAgentSession
+      tags: [agents]
+      summary: Start a multi-agent debugging session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAgentSessionBody"
+      responses:
+        "201":
+          description: Agent session created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AgentSession"
+
+  /agents/{id}:
+    get:
+      operationId: getAgentSession
+      tags: [agents]
+      summary: Get agent session details with reasoning steps
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Agent session details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AgentSession"
+
+  /dashboard/stats:
+    get:
+      operationId: getDashboardStats
+      tags: [dashboard]
+      summary: Get high-level platform statistics
+      responses:
+        "200":
+          description: Dashboard statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardStats"
+
+  /dashboard/activity:
+    get:
+      operationId: getRecentActivity
+      tags: [dashboard]
+      summary: Get recent activity timeline
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: Recent activity items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ActivityItem"
+
+  /dashboard/severity-breakdown:
+    get:
+      operationId: getSeverityBreakdown
+      tags: [dashboard]
+      summary: Get bug count by severity
+      responses:
+        "200":
+          description: Severity breakdown
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SeverityBreakdown"
+
+  /dashboard/language-breakdown:
+    get:
+      operationId: getLanguageBreakdown
+      tags: [dashboard]
+      summary: Get bug/patch counts by language
+      responses:
+        "200":
+          description: Language breakdown
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LanguageStat"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required: [status]
+
+    Repository:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        url:
+          type: string
+        primaryLanguage:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+          enum: [idle, analyzing, analyzed, error]
+        bugCount:
+          type: integer
+        patchedCount:
+          type: integer
+        lastAnalyzedAt:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+      required: [id, name, url, primaryLanguage, status, bugCount, patchedCount, createdAt]
+
+    CreateRepositoryBody:
+      type: object
+      properties:
+        name:
+          type: string
+        url:
+          type: string
+        primaryLanguage:
+          type: string
+        description:
+          type: string
+      required: [name, url, primaryLanguage]
+
+    Bug:
+      type: object
+      properties:
+        id:
+          type: integer
+        repositoryId:
+          type: integer
+        repositoryName:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        severity:
+          type: string
+          enum: [critical, high, medium, low]
+        status:
+          type: string
+          enum: [detected, in_progress, patched, verified, rejected]
+        language:
+          type: string
+        filePath:
+          type: string
+        lineNumber:
+          type: integer
+          nullable: true
+        contextLevel:
+          type: string
+          enum: [bug_level, repository_level, project_level]
+        bugType:
+          type: string
+        patchCount:
+          type: integer
+        detectedAt:
+          type: string
+      required: [id, repositoryId, title, description, severity, status, language, filePath, contextLevel, bugType, patchCount, detectedAt]
+
+    CreateBugBody:
+      type: object
+      properties:
+        repositoryId:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        severity:
+          type: string
+          enum: [critical, high, medium, low]
+        language:
+          type: string
+        filePath:
+          type: string
+        lineNumber:
+          type: integer
+        contextLevel:
+          type: string
+          enum: [bug_level, repository_level, project_level]
+        bugType:
+          type: string
+      required: [repositoryId, title, description, severity, language, filePath, contextLevel, bugType]
+
+    UpdateBugBody:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [detected, in_progress, patched, verified, rejected]
+        severity:
+          type: string
+          enum: [critical, high, medium, low]
+        description:
+          type: string
+
+    Patch:
+      type: object
+      properties:
+        id:
+          type: integer
+        bugId:
+          type: integer
+        bugTitle:
+          type: string
+        diffCode:
+          type: string
+        explanation:
+          type: string
+        status:
+          type: string
+          enum: [pending, applied, rejected]
+        confidence:
+          type: number
+        agentId:
+          type: string
+        contextUsed:
+          type: string
+          enum: [bug_level, repository_level, project_level]
+        testsGenerated:
+          type: integer
+        createdAt:
+          type: string
+      required: [id, bugId, diffCode, explanation, status, confidence, agentId, contextUsed, testsGenerated, createdAt]
+
+    CreatePatchBody:
+      type: object
+      properties:
+        bugId:
+          type: integer
+        diffCode:
+          type: string
+        explanation:
+          type: string
+        confidence:
+          type: number
+        agentId:
+          type: string
+        contextUsed:
+          type: string
+          enum: [bug_level, repository_level, project_level]
+        testsGenerated:
+          type: integer
+      required: [bugId, diffCode, explanation, confidence, agentId, contextUsed, testsGenerated]
+
+    UpdatePatchBody:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [applied, rejected]
+      required: [status]
+
+    TranslationJob:
+      type: object
+      properties:
+        id:
+          type: integer
+        sourceLanguage:
+          type: string
+          enum: [python, java, cpp]
+        targetLanguage:
+          type: string
+          enum: [python, java, cpp]
+        sourceCode:
+          type: string
+        translatedCode:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [pending, processing, completed, failed]
+        notes:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+      required: [id, sourceLanguage, targetLanguage, sourceCode, status, createdAt]
+
+    CreateTranslationBody:
+      type: object
+      properties:
+        sourceLanguage:
+          type: string
+          enum: [python, java, cpp]
+        targetLanguage:
+          type: string
+          enum: [python, java, cpp]
+        sourceCode:
+          type: string
+      required: [sourceLanguage, targetLanguage, sourceCode]
+
+    Vulnerability:
+      type: object
+      properties:
+        id:
+          type: integer
+        bugId:
+          type: integer
+          nullable: true
+        bugTitle:
+          type: string
+          nullable: true
+        cveId:
+          type: string
+          nullable: true
+        title:
+          type: string
+        description:
+          type: string
+        severity:
+          type: string
+          enum: [critical, high, medium, low]
+        status:
+          type: string
+          enum: [open, mitigated, resolved]
+        category:
+          type: string
+        repositoryName:
+          type: string
+        detectedAt:
+          type: string
+      required: [id, title, description, severity, status, category, repositoryName, detectedAt]
+
+    UpdateVulnerabilityBody:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [open, mitigated, resolved]
+      required: [status]
+
+    AgentSession:
+      type: object
+      properties:
+        id:
+          type: integer
+        bugId:
+          type: integer
+        bugTitle:
+          type: string
+        agents:
+          type: array
+          items:
+            $ref: "#/components/schemas/AgentRole"
+        status:
+          type: string
+          enum: [initializing, analyzing, debating, converged, failed]
+        reasoningSteps:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReasoningStep"
+        consensus:
+          type: string
+          nullable: true
+        patchId:
+          type: integer
+          nullable: true
+        createdAt:
+          type: string
+      required: [id, bugId, bugTitle, agents, status, reasoningSteps, createdAt]
+
+    AgentRole:
+      type: object
+      properties:
+        name:
+          type: string
+        role:
+          type: string
+          enum: [detector, analyzer, patcher, validator, security]
+        model:
+          type: string
+        contribution:
+          type: string
+      required: [name, role, model, contribution]
+
+    ReasoningStep:
+      type: object
+      properties:
+        agentName:
+          type: string
+        step:
+          type: string
+        output:
+          type: string
+        timestamp:
+          type: string
+      required: [agentName, step, output, timestamp]
+
+    CreateAgentSessionBody:
+      type: object
+      properties:
+        bugId:
+          type: integer
+      required: [bugId]
+
+    DashboardStats:
+      type: object
+      properties:
+        totalRepositories:
+          type: integer
+        totalBugs:
+          type: integer
+        patchesApplied:
+          type: integer
+        openVulnerabilities:
+          type: integer
+        patchSuccessRate:
+          type: number
+        bugsThisWeek:
+          type: integer
+        patchesThisWeek:
+          type: integer
+        activeAgentSessions:
+          type: integer
+        translationJobs:
+          type: integer
+      required: [totalRepositories, totalBugs, patchesApplied, openVulnerabilities, patchSuccessRate, bugsThisWeek, patchesThisWeek, activeAgentSessions, translationJobs]
+
+    ActivityItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+          enum: [bug_detected, patch_applied, patch_rejected, vulnerability_found, agent_session_started, translation_completed, repository_analyzed]
+        title:
+          type: string
+        detail:
+          type: string
+        severity:
+          type: string
+          nullable: true
+        repositoryName:
+          type: string
+          nullable: true
+        timestamp:
+          type: string
+      required: [id, type, title, detail, timestamp]
+
+    SeverityBreakdown:
+      type: object
+      properties:
+        critical:
+          type: integer
+        high:
+          type: integer
+        medium:
+          type: integer
+        low:
+          type: integer
+      required: [critical, high, medium, low]
+
+    LanguageStat:
+      type: object
+      properties:
+        language:
+          type: string
+        bugCount:
+          type: integer
+        patchedCount:
+          type: integer
+        successRate:
+          type: number
+      required: [language, bugCount, patchedCount, successRate]
